@@ -1,0 +1,21 @@
+# Gradle & Android Studio
+.gradle/
+build/
+*/build/
+local.properties
+*.iml
+.idea/
+.DS_Store
+
+# Keystores & secrets
+*.jks
+*.keystore
+
+# Build artifacts (optional: keep outputs out of git)
+app/build/
+app/release/
+*.apk
+*.aab
+*.ap_
+*.dex
+
