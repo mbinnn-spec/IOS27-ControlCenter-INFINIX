@@ -1,12 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="bg_primary">#0B0D12</color>
-    <color name="bg_card">#171B24</color>
-    <color name="bg_card_stroke">#2A3140</color>
-    <color name="accent_blue">#007AFF</color>
-    <color name="accent_green">#34C759</color>
-    <color name="accent_amber">#FF9F0A</color>
-    <color name="text_primary">#F5F7FA</color>
-    <color name="text_secondary">#9AA3B2</color>
-</resources>
+    <!-- Neo-Brutalist Design Tokens -->
+    <color name="nb_canvas">#FAF7F2</color>
+    <color name="nb_surface">#FFFFFF</color>
+    <color name="nb_surface_muted">#F1ECE1</color>
+    <color name="nb_ink">#111111</color>
+    <color name="nb_text_secondary">#525252</color>
 
+    <color name="nb_yellow">#FFD21F</color>
+    <color name="nb_butter">#FFE48F</color>
+    <color name="nb_purple">#8B6BFF</color>
+    <color name="nb_purple_soft">#EDE8FF</color>
+    <color name="nb_green">#22D15E</color>
+    <color name="nb_green_soft">#DDFBE6</color>
+    <color name="nb_pink">#FF4D7D</color>
+    <color name="nb_amber">#FF9F0A</color>
+    <color name="nb_amber_soft">#FFF2CC</color>
+
+    <!-- Legacy aliases kept for compatibility -->
+    <color name="bg_primary">@color/nb_canvas</color>
+    <color name="bg_card">@color/nb_surface</color>
+    <color name="bg_card_stroke">@color/nb_ink</color>
+    <color name="accent_blue">@color/nb_purple</color>
+    <color name="accent_green">@color/nb_green</color>
+    <color name="accent_amber">@color/nb_amber</color>
+    <color name="text_primary">@color/nb_ink</color>
+    <color name="text_secondary">@color/nb_text_secondary</color>
+</resources>

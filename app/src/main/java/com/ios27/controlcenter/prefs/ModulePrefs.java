@@ -1,11 +1,11 @@
 package com.ios27.controlcenter.prefs;
 
-import android.os.SystemClock;
+import android.content.SharedPreferences;
 
-import de.robv.android.xposed.XSharedPreferences;
+import io.github.libxposed.api.XposedInterface;
 
 /**
- * Central preference constants and safe XSharedPreferences reader for SystemUI hooks.
+ * Central preference constants and LibXposed RemotePreferences reader for SystemUI hooks.
  */
 public final class ModulePrefs {
 
@@ -29,40 +29,21 @@ public final class ModulePrefs {
     public static final String KEY_HIDE_IOT_CARD = "hide_iot_card";
     public static final String KEY_IOS_ANIMATIONS = "ios_animations";
 
-    private static volatile XSharedPreferences sPrefs;
-    private static volatile long sLastCheckMs = 0L;
+    private static volatile SharedPreferences sPrefs;
 
     private ModulePrefs() {
     }
 
-    public static void init() {
+    public static void init(XposedInterface xposed) {
         try {
-            XSharedPreferences prefs = new XSharedPreferences(PACKAGE_NAME, PREFS_NAME);
-            prefs.makeWorldReadable();
-            prefs.reload();
-            sPrefs = prefs;
+            sPrefs = xposed.getRemotePreferences(PREFS_NAME);
         } catch (Throwable ignored) {
             sPrefs = null;
         }
     }
 
     public static void reloadIfChanged() {
-        long now = SystemClock.uptimeMillis();
-        if (now - sLastCheckMs < 500L) {
-            return;
-        }
-        sLastCheckMs = now;
-        try {
-            XSharedPreferences prefs = sPrefs;
-            if (prefs == null) {
-                init();
-                return;
-            }
-            if (prefs.hasFileChanged()) {
-                prefs.reload();
-            }
-        } catch (Throwable ignored) {
-        }
+        // RemotePreferences in LibXposed API 102 stays synced automatically via IPC.
     }
 
     public static boolean isEnabled() {
@@ -115,7 +96,7 @@ public final class ModulePrefs {
 
     private static boolean getBoolean(String key, boolean def) {
         try {
-            XSharedPreferences prefs = sPrefs;
+            SharedPreferences prefs = sPrefs;
             return prefs != null ? prefs.getBoolean(key, def) : def;
         } catch (Throwable ignored) {
             return def;
@@ -124,7 +105,7 @@ public final class ModulePrefs {
 
     private static int getInt(String key, int def) {
         try {
-            XSharedPreferences prefs = sPrefs;
+            SharedPreferences prefs = sPrefs;
             return prefs != null ? prefs.getInt(key, def) : def;
         } catch (Throwable ignored) {
             return def;
@@ -135,4 +116,3 @@ public final class ModulePrefs {
         return Math.max(min, Math.min(max, val));
     }
 }
-

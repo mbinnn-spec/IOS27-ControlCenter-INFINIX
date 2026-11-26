@@ -9,10 +9,6 @@ import android.view.animation.PathInterpolator;
 
 import com.ios27.controlcenter.prefs.ModulePrefs;
 
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
-
 /**
  * 120Hz-optimized iOS Control Center animations:
  * - Caches row View references (zero getIdentifier() lookups per frame)
@@ -35,130 +31,88 @@ public final class AnimationHook {
     }
 
     public static void install(ClassLoader cl) {
-        Class<?> cls = XposedHelpers.findClassIfExists(CLS_ANIM_HELPER, cl);
+        Class<?> cls = HookHelper.findClass(CLS_ANIM_HELPER, cl);
         if (cls == null) {
             return;
         }
 
-        XposedBridge.hookAllConstructors(cls, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosAnimationsEnabled()) {
-                        return;
-                    }
-                    Object helper = param.thisObject;
-                    XposedHelpers.setObjectField(helper, "INTEPOLATOR_EXPAND", IOS_EXPAND_INTERP);
-                    XposedHelpers.setObjectField(helper, "INTEPOLATOR_COLLAPSE", IOS_COLLAPSE_INTERP);
-                    XposedHelpers.setLongField(helper, "EXPAND_DURATION", 290L);
-                    XposedHelpers.setLongField(helper, "COLLAPSE_DURATION", 200L);
-                    XposedHelpers.setLongField(helper, "EXPAND_INTERVAL", 14L);
-                    XposedHelpers.setLongField(helper, "COLLAPSE_INTERVAL", 10L);
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAllConstructorsAfter(cls, (chain, res) -> {
+            if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosAnimationsEnabled()) {
+                return;
             }
+            Object helper = chain.getThisObject();
+            HookHelper.setObjectField(helper, "INTEPOLATOR_EXPAND", IOS_EXPAND_INTERP);
+            HookHelper.setObjectField(helper, "INTEPOLATOR_COLLAPSE", IOS_COLLAPSE_INTERP);
+            HookHelper.setLongField(helper, "EXPAND_DURATION", 290L);
+            HookHelper.setLongField(helper, "COLLAPSE_DURATION", 200L);
+            HookHelper.setLongField(helper, "EXPAND_INTERVAL", 14L);
+            HookHelper.setLongField(helper, "COLLAPSE_INTERVAL", 10L);
         });
 
-        XposedHelpers.findAndHookMethod(cls, "setAlphaAndScale", View.class, float.class, float.class, new XC_MethodHook() {
-            @Override
-            protected void beforeHookedMethod(MethodHookParam param) {
-                try {
-                    if (!ModulePrefs.isEnabled()) {
-                        return;
-                    }
-                    View v = (View) param.args[0];
-                    if (v == null) {
-                        return;
-                    }
-                    Object tag = v.getTag(KEY_IOS_SHAPE);
-                    if (tag instanceof Integer && (Integer) tag == SHAPE_HIDDEN) {
-                        param.args[1] = 0f;
-                        param.args[2] = 0f;
-                        v.setVisibility(View.INVISIBLE);
-                        return;
-                    }
-                    if (ModulePrefs.isIosAnimationsEnabled() && v.getWidth() > 0 && v.getHeight() > 0) {
-                        v.setPivotX(v.getWidth() * 0.5f);
-                        v.setPivotY(v.getHeight() * 0.4f);
-                    }
-                } catch (Throwable ignored) {
+        HookHelper.hook(cls, "setAlphaAndScale", chain -> {
+            if (!ModulePrefs.isEnabled()) {
+                return chain.proceed();
+            }
+            View v = (View) chain.getArg(0);
+            if (v != null) {
+                Object tag = v.getTag(KEY_IOS_SHAPE);
+                if (tag instanceof Integer && (Integer) tag == SHAPE_HIDDEN) {
+                    v.setVisibility(View.INVISIBLE);
+                    return chain.proceed(new Object[]{v, 0f, 0f});
+                }
+                if (ModulePrefs.isIosAnimationsEnabled() && v.getWidth() > 0 && v.getHeight() > 0) {
+                    v.setPivotX(v.getWidth() * 0.5f);
+                    v.setPivotY(v.getHeight() * 0.4f);
                 }
             }
-        });
+            return chain.proceed();
+        }, View.class, float.class, float.class);
 
-        XposedHelpers.findAndHookMethod(cls, "startPanelAnim", float.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosAnimationsEnabled()) {
-                        return;
-                    }
-                    float fraction = (float) param.args[0];
-                    View container = getContainerView(param.thisObject);
-                    if (container != null) {
-                        setHighRefreshRate(container, fraction > 0.005f);
-                        applyInteractiveSwipe(container, fraction);
-                    }
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAfter(cls, "startPanelAnim", (chain, res) -> {
+            if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosAnimationsEnabled()) {
+                return;
             }
-        });
+            float fraction = (float) chain.getArg(0);
+            View container = getContainerView(chain.getThisObject());
+            if (container != null) {
+                setHighRefreshRate(container, fraction > 0.005f);
+                applyInteractiveSwipe(container, fraction);
+            }
+        }, float.class);
 
-        XposedHelpers.findAndHookMethod(cls, "startPanelAnim", boolean.class, boolean.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosAnimationsEnabled()) {
-                        return;
-                    }
-                    boolean expand = (boolean) param.args[0];
-                    View container = getContainerView(param.thisObject);
-                    if (container != null) {
-                        setHighRefreshRate(container, expand);
-                        animateRowSnap(container, expand);
-                    }
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAfter(cls, "startPanelAnim", (chain, res) -> {
+            if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosAnimationsEnabled()) {
+                return;
             }
-        });
+            boolean expand = (boolean) chain.getArg(0);
+            View container = getContainerView(chain.getThisObject());
+            if (container != null) {
+                setHighRefreshRate(container, expand);
+                animateRowSnap(container, expand);
+            }
+        }, boolean.class, boolean.class);
 
-        XposedHelpers.findAndHookMethod(cls, "resetControlPanelView", String.class, boolean.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    View container = getContainerView(param.thisObject);
-                    if (container != null) {
-                        resetRowTransforms(container);
-                    }
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAfter(cls, "resetControlPanelView", (chain, res) -> {
+            View container = getContainerView(chain.getThisObject());
+            if (container != null) {
+                resetRowTransforms(container);
             }
-        });
+        }, String.class, boolean.class);
 
-        XposedHelpers.findAndHookMethod(cls, "resetPanelView", String.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    View container = getContainerView(param.thisObject);
-                    if (container != null) {
-                        resetRowTransforms(container);
-                    }
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAfter(cls, "resetPanelView", (chain, res) -> {
+            View container = getContainerView(chain.getThisObject());
+            if (container != null) {
+                resetRowTransforms(container);
             }
-        });
+        }, String.class);
     }
 
     private static View getContainerView(Object animHelper) {
-        try {
-            Object ccController = XposedHelpers.getObjectField(animHelper, "controlCenterController");
-            if (ccController == null) {
-                return null;
-            }
-            return (View) XposedHelpers.getObjectField(ccController, "mQsContainerView");
-        } catch (Throwable ignored) {
+        Object ccController = HookHelper.getObjectField(animHelper, "controlCenterController");
+        if (ccController == null) {
             return null;
         }
+        return (View) HookHelper.getObjectField(ccController, "mQsContainerView");
     }
 
     private static RowCache getCache(View container) {
@@ -308,7 +262,7 @@ public final class AnimationHook {
     private static void setHighRefreshRate(View container, boolean enable) {
         try {
             View root = container.getRootView();
-            if (root == null) {
+            if (root == null || !root.isAttachedToWindow()) {
                 return;
             }
             Object prev = root.getTag(KEY_REFRESH_ACTIVE);
@@ -345,7 +299,7 @@ public final class AnimationHook {
                 wlp.preferredRefreshRate = 0f;
             }
 
-            WindowManager wm = (WindowManager) root.getContext().getSystemService(WindowManager.class);
+            WindowManager wm = root.getContext().getSystemService(WindowManager.class);
             if (wm != null) {
                 wm.updateViewLayout(root, wlp);
             }

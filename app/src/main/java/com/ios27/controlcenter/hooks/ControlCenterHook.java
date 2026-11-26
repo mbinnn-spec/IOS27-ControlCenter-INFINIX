@@ -22,17 +22,13 @@ import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.ios27.controlcenter.HookEntry;
 import com.ios27.controlcenter.prefs.ModulePrefs;
 import com.ios27.controlcenter.ui.IosHeaderIconDrawable;
 import com.ios27.controlcenter.ui.LiquidGlassDrawable;
 import com.ios27.controlcenter.ui.TransparentNoOpDrawable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 
 /**
  * Hooks XOS 15 Control Center container, top header (+ / Power buttons + status strip),
@@ -49,6 +45,8 @@ public final class ControlCenterHook {
     private static final String TAG_POWER_BTN = "ios27_power_btn";
     private static final String TAG_HEADER_SPACER = "ios27_header_spacer";
 
+    private static boolean sStylingHeader = false;
+
     private ControlCenterHook() {
     }
 
@@ -60,57 +58,44 @@ public final class ControlCenterHook {
     }
 
     private static void hookContainer(ClassLoader cl) {
-        Class<?> cls = XposedHelpers.findClassIfExists(CLS_QS_CONTAINER, cl);
+        Class<?> cls = HookHelper.findClass(CLS_QS_CONTAINER, cl);
         if (cls == null) {
             return;
         }
 
-        XposedHelpers.findAndHookMethod(cls, "onFinishInflate", new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    ModulePrefs.reloadIfChanged();
-                    if (!ModulePrefs.isEnabled()) {
-                        return;
-                    }
-                    styleContainer((ViewGroup) param.thisObject, 1f);
-                } catch (Throwable t) {
-                    XposedBridge.log(HookEntry.TAG + ": container onFinishInflate err: " + t);
-                }
+        HookHelper.hookAfter(cls, "onFinishInflate", (chain, res) -> {
+            if (!ModulePrefs.isEnabled()) {
+                return;
             }
+            styleContainer((ViewGroup) chain.getThisObject(), 1f);
         });
 
-        XposedHelpers.findAndHookMethod(cls, "updateResources", Configuration.class, String.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    ModulePrefs.reloadIfChanged();
-                    if (!ModulePrefs.isEnabled()) {
-                        return;
-                    }
-                    ViewGroup container = (ViewGroup) param.thisObject;
-                    float exp = XposedHelpers.getFloatField(container, "mQsExpansion");
-                    styleContainer(container, exp);
-                } catch (Throwable t) {
-                    XposedBridge.log(HookEntry.TAG + ": container updateResources err: " + t);
-                }
+        HookHelper.hookAfter(cls, "updateResources", (chain, res) -> {
+            if (!ModulePrefs.isEnabled()) {
+                return;
             }
-        });
+            ViewGroup container = (ViewGroup) chain.getThisObject();
+            float exp = HookHelper.getFloatField(container, "mQsExpansion");
+            styleContainer(container, exp);
+        }, Configuration.class, String.class);
 
-        XposedHelpers.findAndHookMethod(cls, "setExpansion", float.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    if (!ModulePrefs.isEnabled()) {
-                        return;
-                    }
-                    ViewGroup container = (ViewGroup) param.thisObject;
-                    float fraction = (float) param.args[0];
-                    updateBackdropDim(container, fraction);
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAfter(cls, "onConfigurationChanged", (chain, res) -> {
+            if (!ModulePrefs.isEnabled()) {
+                return;
             }
-        });
+            ViewGroup container = (ViewGroup) chain.getThisObject();
+            float exp = HookHelper.getFloatField(container, "mQsExpansion");
+            styleContainer(container, exp);
+        }, Configuration.class);
+
+        HookHelper.hookAfter(cls, "setExpansion", (chain, res) -> {
+            if (!ModulePrefs.isEnabled()) {
+                return;
+            }
+            ViewGroup container = (ViewGroup) chain.getThisObject();
+            float fraction = (float) chain.getArg(0);
+            updateBackdropDim(container, fraction);
+        }, float.class);
     }
 
     private static void styleContainer(ViewGroup container, float expansion) {
@@ -121,9 +106,10 @@ public final class ControlCenterHook {
 
         View fixedTiles = findViewByIdName(container, "fixed_tiles_view");
         if (fixedTiles != null) {
-            // Keep XOS native padding/centering inside CustomGridLayout so the 4 circles stay dead-center.
             applyDarkGlass(fixedTiles, 30f * density, 0xFF3E689E);
         }
+
+        syncLandscapeVariableRow(container);
 
         View mediaView = findViewByIdName(container, "media_container");
         if (mediaView != null) {
@@ -136,47 +122,80 @@ public final class ControlCenterHook {
         }
     }
 
+    private static void syncLandscapeVariableRow(ViewGroup container) {
+        boolean isLandscape = container.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+        View row1 = findViewByIdName(container, "fixed_row1");
+        View row2 = findViewByIdName(container, "fixed_row2");
+        View varTiles = findViewByIdName(container, "variable_tiles_view");
+        if (varTiles == null) {
+            return;
+        }
+        float d = container.getResources().getDisplayMetrics().density;
+        if (isLandscape) {
+            int row1W = row1 != null ? row1.getMeasuredWidth() : 0;
+            int targetW = row1W > 0 ? row1W : Math.round(442f * d);
+            ViewGroup.LayoutParams varLp = varTiles.getLayoutParams();
+            if (varLp != null && (varLp.width != targetW || varLp.height != ViewGroup.LayoutParams.WRAP_CONTENT)) {
+                varLp.width = targetW;
+                varLp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                varTiles.setLayoutParams(varLp);
+            }
+            if (row2 instanceof LinearLayout) {
+                ((LinearLayout) row2).setGravity(Gravity.CENTER_HORIZONTAL);
+                ViewGroup.LayoutParams r2Lp = row2.getLayoutParams();
+                if (r2Lp != null && (r2Lp.width != ViewGroup.LayoutParams.WRAP_CONTENT || r2Lp.height != ViewGroup.LayoutParams.WRAP_CONTENT)) {
+                    r2Lp.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    r2Lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    row2.setLayoutParams(r2Lp);
+                }
+            }
+            varTiles.requestLayout();
+        } else {
+            View fixedTiles = findViewByIdName(container, "fixed_tiles_view");
+            ViewGroup.LayoutParams refLp = fixedTiles != null ? fixedTiles.getLayoutParams() : null;
+            ViewGroup.LayoutParams varLp = varTiles.getLayoutParams();
+            if (refLp != null && varLp != null && refLp.width > 0 && refLp.height > 0
+                    && (varLp.width != refLp.width || varLp.height != refLp.height)) {
+                varLp.width = refLp.width;
+                varLp.height = refLp.height;
+                varTiles.setLayoutParams(varLp);
+            }
+            varTiles.requestLayout();
+        }
+    }
+
     private static void hookIotCards(ClassLoader cl) {
-        Class<?> cls = XposedHelpers.findClassIfExists(CLS_IOT_CONTROLLER, cl);
+        Class<?> cls = HookHelper.findClass(CLS_IOT_CONTROLLER, cl);
         if (cls == null) {
             return;
         }
 
-        XposedHelpers.findAndHookMethod(cls, "attachRoot", ViewGroup.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    if (!ModulePrefs.isEnabled()) {
-                        return;
-                    }
-                    ViewGroup root = (ViewGroup) param.args[0];
-                    if (root != null) {
-                        styleIotContainer(root);
-                    }
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAfter(cls, "attachRoot", (chain, res) -> {
+            if (!ModulePrefs.isEnabled()) {
+                return;
             }
-        });
+            ViewGroup root = (ViewGroup) chain.getArg(0);
+            if (root != null) {
+                styleIotContainer(root);
+            }
+        }, ViewGroup.class);
 
-        XposedHelpers.findAndHookMethod(cls, "setIotVisibility", int.class, boolean.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    if (!ModulePrefs.isEnabled()) {
-                        return;
-                    }
-                    View root = findViewByFieldOrNull(param.thisObject);
-                    if (root != null) {
-                        styleIotContainer(root);
-                    }
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAfter(cls, "setIotVisibility", (chain, res) -> {
+            if (!ModulePrefs.isEnabled()) {
+                return;
             }
-        });
+            View root = findViewByFieldOrNull(chain.getThisObject());
+            if (root != null) {
+                styleIotContainer(root);
+            }
+        }, int.class, boolean.class);
     }
 
     private static View findViewByFieldOrNull(Object obj) {
-        for (java.lang.reflect.Field f : obj.getClass().getDeclaredFields()) {
+        if (obj == null) {
+            return null;
+        }
+        for (Field f : obj.getClass().getDeclaredFields()) {
             if (View.class.isAssignableFrom(f.getType())) {
                 try {
                     f.setAccessible(true);
@@ -236,45 +255,67 @@ public final class ControlCenterHook {
     }
 
     private static void hookHeader(ClassLoader cl) {
-        Class<?> cls = XposedHelpers.findClassIfExists(CLS_HEADER, cl);
+        Class<?> cls = HookHelper.findClass(CLS_HEADER, cl);
         if (cls == null) {
             return;
         }
 
-        XC_MethodHook headerHook = new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    ModulePrefs.reloadIfChanged();
-                    if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosHeaderEnabled()) {
-                        return;
-                    }
-                    styleHeader((RelativeLayout) param.thisObject);
-                } catch (Throwable t) {
-                    XposedBridge.log(HookEntry.TAG + ": header hook err: " + t);
-                }
+        HookHelper.AfterCallback headerCb = (chain, res) -> {
+            if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosHeaderEnabled()) {
+                return;
             }
+            styleHeaderSafe((RelativeLayout) chain.getThisObject());
         };
 
-        XposedHelpers.findAndHookMethod(cls, "onFinishInflate", headerHook);
-        XposedHelpers.findAndHookMethod(cls, "updateUI", headerHook);
-        XposedHelpers.findAndHookMethod(cls, "updateResources", headerHook);
+        HookHelper.hookAfter(cls, "onFinishInflate", headerCb);
+        HookHelper.hookAfter(cls, "updateUI", headerCb);
+        HookHelper.hookAfter(cls, "updateResources", headerCb);
+        HookHelper.hookAfter(cls, "onConfigurationChanged", headerCb, Configuration.class);
+    }
+
+    /**
+     * Guarded against re-entrancy because TrControlCenterHeader.onRtlPropertiesChanged()
+     * invokes updateResources() when padding is queried/resolved.
+     */
+    private static void styleHeaderSafe(RelativeLayout header) {
+        if (sStylingHeader || header == null) {
+            return;
+        }
+        sStylingHeader = true;
+        try {
+            styleHeader(header);
+        } finally {
+            sStylingHeader = false;
+        }
     }
 
     private static void styleHeader(RelativeLayout header) {
         Context ctx = header.getContext();
         float density = ctx.getResources().getDisplayMetrics().density;
+        boolean isLandscape = ctx.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
 
         View statusContainer = findViewByIdName(header, "header_status_bar_container_height");
         View statusIcons = findViewByIdName(header, "qs_status_icons");
         ViewGroup qcHeader = (ViewGroup) findViewByIdName(header, "tr_qc_header");
 
+        if (isLandscape) {
+            ViewGroup.LayoutParams hlp = header.getLayoutParams();
+            int targetH = dp(44, density);
+            if (hlp != null && hlp.height > 0 && hlp.height < targetH) {
+                hlp.height = targetH;
+                header.setLayoutParams(hlp);
+            }
+            // Use setPaddingRelative directly without calling getPaddingLeft/Right (avoids resolvePadding recursion).
+            header.setPaddingRelative(0, dp(4, density), 0, dp(4, density));
+        }
+
         if (qcHeader != null) {
+            qcHeader.setVisibility(View.VISIBLE);
             RelativeLayout.LayoutParams qcLp = (RelativeLayout.LayoutParams) qcHeader.getLayoutParams();
             if (qcLp != null) {
                 clearRelativeVerticalRules(qcLp);
                 qcLp.width = ViewGroup.LayoutParams.MATCH_PARENT;
-                qcLp.height = dp(40, density);
+                qcLp.height = dp(isLandscape ? 34 : 40, density);
                 qcLp.topMargin = 0;
                 qcLp.bottomMargin = 0;
                 qcLp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
@@ -306,7 +347,7 @@ public final class ControlCenterHook {
                 }
             }
 
-            ensureHeaderActionButtons(qcHeader, settingsView, moreView, density);
+            ensureHeaderActionButtons(qcHeader, settingsView, moreView, dp(isLandscape ? 32 : 40, density), density);
         }
 
         if (statusContainer != null) {
@@ -314,8 +355,8 @@ public final class ControlCenterHook {
             if (stLp != null) {
                 clearRelativeVerticalRules(stLp);
                 stLp.width = ViewGroup.LayoutParams.MATCH_PARENT;
-                stLp.height = dp(26, density);
-                stLp.topMargin = dp(48, density);
+                stLp.height = dp(isLandscape ? 24 : 26, density);
+                stLp.topMargin = dp(isLandscape ? 5 : 48, density);
                 stLp.bottomMargin = 0;
                 stLp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
                 statusContainer.setLayoutParams(stLp);
@@ -325,11 +366,12 @@ public final class ControlCenterHook {
         if (statusIcons != null) {
             ViewGroup.MarginLayoutParams iconLp = (ViewGroup.MarginLayoutParams) statusIcons.getLayoutParams();
             if (iconLp != null) {
-                iconLp.height = dp(24, density);
+                iconLp.height = dp(isLandscape ? 22 : 24, density);
                 iconLp.topMargin = dp(1, density);
                 iconLp.bottomMargin = dp(1, density);
-                iconLp.leftMargin = dp(7, density);
-                iconLp.rightMargin = dp(7, density);
+                int sideMargin = dp(isLandscape ? 46 : 7, density);
+                iconLp.leftMargin = sideMargin;
+                iconLp.rightMargin = sideMargin;
                 statusIcons.setLayoutParams(iconLp);
             }
         }
@@ -348,10 +390,10 @@ public final class ControlCenterHook {
             ViewGroup qcHeader,
             View settingsView,
             View moreView,
+            int btnSize,
             float density
     ) {
         Context ctx = qcHeader.getContext();
-        int btnSize = dp(40, density);
 
         ImageView plusBtn = qcHeader.findViewWithTag(TAG_PLUS_BTN);
         if (plusBtn == null) {
@@ -363,6 +405,13 @@ public final class ControlCenterHook {
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(btnSize, btnSize);
             plusBtn.setLayoutParams(lp);
             qcHeader.addView(plusBtn, 0);
+        } else {
+            ViewGroup.LayoutParams lp = plusBtn.getLayoutParams();
+            if (lp != null && (lp.width != btnSize || lp.height != btnSize)) {
+                lp.width = btnSize;
+                lp.height = btnSize;
+                plusBtn.setLayoutParams(lp);
+            }
         }
         applyHeaderCircleGlass(plusBtn, density);
         plusBtn.setOnClickListener(v -> {
@@ -399,6 +448,13 @@ public final class ControlCenterHook {
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(btnSize, btnSize);
             powerBtn.setLayoutParams(lp);
             qcHeader.addView(powerBtn);
+        } else {
+            ViewGroup.LayoutParams lp = powerBtn.getLayoutParams();
+            if (lp != null && (lp.width != btnSize || lp.height != btnSize)) {
+                lp.width = btnSize;
+                lp.height = btnSize;
+                powerBtn.setLayoutParams(lp);
+            }
         }
         applyHeaderCircleGlass(powerBtn, density);
         powerBtn.setOnClickListener(v -> triggerPowerMenu(ctx, settingsView));
@@ -456,28 +512,20 @@ public final class ControlCenterHook {
     }
 
     private static void hookMediaView(ClassLoader cl) {
-        Class<?> cls = XposedHelpers.findClassIfExists(CLS_MEDIA_VIEW, cl);
+        Class<?> cls = HookHelper.findClass(CLS_MEDIA_VIEW, cl);
         if (cls == null) {
             return;
         }
 
-        XC_MethodHook mediaHook = new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    ModulePrefs.reloadIfChanged();
-                    if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosMediaEnabled()) {
-                        return;
-                    }
-                    styleMediaViewInternal((View) param.thisObject);
-                } catch (Throwable t) {
-                    XposedBridge.log(HookEntry.TAG + ": media hook err: " + t);
-                }
+        HookHelper.AfterCallback mediaCb = (chain, res) -> {
+            if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosMediaEnabled()) {
+                return;
             }
+            styleMediaViewInternal((View) chain.getThisObject());
         };
 
-        XposedHelpers.findAndHookMethod(cls, "onFinishInflate", mediaHook);
-        XposedHelpers.findAndHookMethod(cls, "onConfigurationChanged", Configuration.class, mediaHook);
+        HookHelper.hookAfter(cls, "onFinishInflate", mediaCb);
+        HookHelper.hookAfter(cls, "onConfigurationChanged", mediaCb, Configuration.class);
     }
 
     public static void styleMediaViewInternal(View mediaView) {

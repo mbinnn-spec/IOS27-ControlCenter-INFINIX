@@ -1,12 +1,12 @@
 package com.ios27.controlcenter.hooks;
 
 import android.content.res.ColorStateList;
-import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.view.View;
@@ -14,14 +14,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 
-import com.ios27.controlcenter.HookEntry;
 import com.ios27.controlcenter.prefs.ModulePrefs;
 import com.ios27.controlcenter.ui.TransparentNoOpDrawable;
-
-import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XC_MethodReplacement;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 
 /**
  * Renders iOS 26/27 Liquid Glass vertical capsule brightness & volume sliders
@@ -47,87 +41,66 @@ public final class SliderHook {
     }
 
     private static void hookBrightnessView(ClassLoader cl) {
-        Class<?> cls = XposedHelpers.findClassIfExists(CLS_BRIGHTNESS, cl);
+        Class<?> cls = HookHelper.findClass(CLS_BRIGHTNESS, cl);
         if (cls == null) {
             return;
         }
 
-        XposedHelpers.findAndHookMethod(cls, "onFinishInflate", new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    if (ModulePrefs.isEnabled() && ModulePrefs.isIosSlidersEnabled()) {
-                        clearContainerBackground((View) param.thisObject);
-                    }
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAfter(cls, "onFinishInflate", (chain, res) -> {
+            if (ModulePrefs.isEnabled() && ModulePrefs.isIosSlidersEnabled()) {
+                clearContainerBackground((View) chain.getThisObject());
             }
         });
 
-        XposedHelpers.findAndHookMethod(cls, "updateIcon", boolean.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    if (ModulePrefs.isEnabled() && ModulePrefs.isIosSlidersEnabled()) {
-                        View root = (View) param.thisObject;
-                        clearContainerBackground(root);
-                        syncSiblingIconTint(root);
-                    }
-                } catch (Throwable ignored) {
-                }
+        HookHelper.hookAfter(cls, "updateIcon", (chain, res) -> {
+            if (ModulePrefs.isEnabled() && ModulePrefs.isIosSlidersEnabled()) {
+                View root = (View) chain.getThisObject();
+                clearContainerBackground(root);
+                syncSiblingIconTint(root);
             }
-        });
+        }, boolean.class);
     }
 
     private static void hookVolumeView(ClassLoader cl) {
-        Class<?> cls = XposedHelpers.findClassIfExists(CLS_VOLUME, cl);
+        Class<?> cls = HookHelper.findClass(CLS_VOLUME, cl);
         if (cls == null) {
             return;
         }
 
-        XC_MethodHook clearHook = new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) {
-                try {
-                    if (ModulePrefs.isEnabled() && ModulePrefs.isIosSlidersEnabled()) {
-                        View root = (View) param.thisObject;
-                        clearContainerBackground(root);
-                        syncSiblingIconTint(root);
-                    }
-                } catch (Throwable ignored) {
-                }
+        HookHelper.AfterCallback clearCb = (chain, res) -> {
+            if (ModulePrefs.isEnabled() && ModulePrefs.isIosSlidersEnabled()) {
+                View root = (View) chain.getThisObject();
+                clearContainerBackground(root);
+                syncSiblingIconTint(root);
             }
         };
 
-        XposedHelpers.findAndHookMethod(cls, "onFinishInflate", clearHook);
-        XposedHelpers.findAndHookMethod(cls, "updateResources", clearHook);
-        XposedHelpers.findAndHookMethod(cls, "checkVolumeIcon", int.class, clearHook);
-        XposedHelpers.findAndHookMethod(cls, "checkVolumeTintByPercent", int.class, clearHook);
+        HookHelper.hookAfter(cls, "onFinishInflate", clearCb);
+        HookHelper.hookAfter(cls, "updateResources", clearCb);
+        HookHelper.hookAfter(cls, "checkVolumeIcon", clearCb, int.class);
+        HookHelper.hookAfter(cls, "checkVolumeTintByPercent", clearCb, int.class);
     }
 
     private static void hookSeekBarDraw(ClassLoader cl) {
-        Class<?> cls = XposedHelpers.findClassIfExists(CLS_SEEKBAR, cl);
+        Class<?> cls = HookHelper.findClass(CLS_SEEKBAR, cl);
         if (cls == null) {
             return;
         }
 
-        XposedHelpers.findAndHookMethod(cls, "onDraw", Canvas.class, new XC_MethodReplacement() {
-            @Override
-            protected Object replaceHookedMethod(MethodHookParam param) throws Throwable {
-                if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosSlidersEnabled()) {
-                    return XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args);
-                }
-                try {
-                    SeekBar seekBar = (SeekBar) param.thisObject;
-                    Canvas canvas = (Canvas) param.args[0];
-                    drawLiquidGlassSlider(seekBar, canvas);
-                } catch (Throwable t) {
-                    XposedBridge.log(HookEntry.TAG + ": slider onDraw err: " + t);
-                    return XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args);
-                }
-                return null;
+        HookHelper.hook(cls, "onDraw", chain -> {
+            if (!ModulePrefs.isEnabled() || !ModulePrefs.isIosSlidersEnabled()) {
+                return chain.proceed();
             }
-        });
+            try {
+                SeekBar seekBar = (SeekBar) chain.getThisObject();
+                Canvas canvas = (Canvas) chain.getArg(0);
+                drawLiquidGlassSlider(seekBar, canvas);
+                return null;
+            } catch (Throwable t) {
+                HookHelper.log("slider onDraw err", t);
+                return chain.proceed();
+            }
+        }, Canvas.class);
     }
 
     private static void drawLiquidGlassSlider(SeekBar seekBar, Canvas canvas) {
@@ -158,11 +131,9 @@ public final class SliderHook {
         int saveCount = canvas.save();
         canvas.clipPath(state.clipPath);
 
-        // Dark frosted track
         canvas.drawRoundRect(state.bounds, radius, radius, state.trackPaint);
         canvas.drawRoundRect(state.bounds, radius, radius, state.sheenPaint);
 
-        // Bright frosted-white fill from bottom
         if (fraction > 0.005f) {
             float fillTop = h * (1f - fraction);
             state.fillRect.set(0f, fillTop, w, h);
@@ -171,7 +142,6 @@ public final class SliderHook {
 
         canvas.restoreToCount(saveCount);
 
-        // Directional specular glass rim
         if (ModulePrefs.getRimIntensity() > 0) {
             float rimRadius = Math.max(0f, radius - state.strokeWidth * 0.5f);
             canvas.drawRoundRect(state.strokeBounds, rimRadius, rimRadius, state.rimPaint);
@@ -220,7 +190,7 @@ public final class SliderHook {
         }
         iv.setTag(TAG_LAST_ICON_COLOR, targetColor);
         iv.setAlpha(1.0f);
-        iv.clearColorFilter();
+        iv.setColorFilter(targetColor, PorterDuff.Mode.SRC_IN);
         iv.setImageTintList(ColorStateList.valueOf(targetColor));
     }
 
@@ -313,4 +283,3 @@ public final class SliderHook {
         }
     }
 }
-

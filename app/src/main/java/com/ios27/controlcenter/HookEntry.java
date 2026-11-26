@@ -1,73 +1,60 @@
 package com.ios27.controlcenter;
 
+import androidx.annotation.NonNull;
+
 import com.ios27.controlcenter.hooks.AnimationHook;
 import com.ios27.controlcenter.hooks.ControlCenterHook;
+import com.ios27.controlcenter.hooks.HookHelper;
 import com.ios27.controlcenter.hooks.SliderHook;
 import com.ios27.controlcenter.hooks.TileStyleHook;
 import com.ios27.controlcenter.prefs.ModulePrefs;
 
-import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.XC_MethodReplacement;
-import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import io.github.libxposed.api.XposedModule;
 
 /**
- * LSPosed entry point for iOS 27 Control Center (XOS 15).
+ * Modern LibXposed API 102 entry point for iOS 27 Control Center (XOS 15).
  */
-public class HookEntry implements IXposedHookLoadPackage {
+public class HookEntry extends XposedModule {
 
     public static final String TAG = "IOS27CC";
 
-    @Override
-    public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-        if (ModulePrefs.PACKAGE_NAME.equals(lpparam.packageName)) {
-            hookSelfStatus(lpparam.classLoader);
-            return;
-        }
-
-        if (!"com.android.systemui".equals(lpparam.packageName)) {
-            return;
-        }
-
-        ModulePrefs.init();
-
-        try {
-            ControlCenterHook.install(lpparam.classLoader);
-        } catch (Throwable t) {
-            XposedBridge.log(TAG + ": ControlCenterHook failed: " + t);
-        }
-
-        try {
-            TileStyleHook.install(lpparam.classLoader);
-        } catch (Throwable t) {
-            XposedBridge.log(TAG + ": TileStyleHook failed: " + t);
-        }
-
-        try {
-            SliderHook.install(lpparam.classLoader);
-        } catch (Throwable t) {
-            XposedBridge.log(TAG + ": SliderHook failed: " + t);
-        }
-
-        try {
-            AnimationHook.install(lpparam.classLoader);
-        } catch (Throwable t) {
-            XposedBridge.log(TAG + ": AnimationHook failed: " + t);
-        }
+    public HookEntry() {
+        super();
     }
 
-    private void hookSelfStatus(ClassLoader classLoader) {
+    @Override
+    public void onPackageReady(@NonNull PackageReadyParam param) {
+        if (!"com.android.systemui".equals(param.getPackageName()) || !param.isFirstPackage()) {
+            return;
+        }
+
+        HookHelper.init(this);
+        ModulePrefs.init(this);
+
+        ClassLoader cl = param.getClassLoader();
+
         try {
-            XposedHelpers.findAndHookMethod(
-                    "com.ios27.controlcenter.MainActivity",
-                    classLoader,
-                    "isModuleActive",
-                    XC_MethodReplacement.returnConstant(Boolean.TRUE)
-            );
+            ControlCenterHook.install(cl);
         } catch (Throwable t) {
-            XposedBridge.log(TAG + ": self status hook failed: " + t);
+            HookHelper.log("ControlCenterHook failed", t);
+        }
+
+        try {
+            TileStyleHook.install(cl);
+        } catch (Throwable t) {
+            HookHelper.log("TileStyleHook failed", t);
+        }
+
+        try {
+            SliderHook.install(cl);
+        } catch (Throwable t) {
+            HookHelper.log("SliderHook failed", t);
+        }
+
+        try {
+            AnimationHook.install(cl);
+        } catch (Throwable t) {
+            HookHelper.log("AnimationHook failed", t);
         }
     }
 }
-

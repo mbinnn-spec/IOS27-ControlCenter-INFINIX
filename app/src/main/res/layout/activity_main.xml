@@ -1,326 +1,879 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main_scroll_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_primary"
-    android:fillViewport="true">
+    android:background="@color/nb_canvas"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:overScrollMode="never">
 
     <LinearLayout
+        android:id="@+id/main_content_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingStart="18dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="18dp"
+        android:paddingBottom="24dp">
+
+        <!-- Top Utility Bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/btn_top_sliders"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:contentDescription="Appearance Sliders"
+                android:focusable="true"
+                android:padding="9dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_nb_sliders" />
+            </FrameLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <FrameLayout
+                android:id="@+id/btn_top_layers"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:clickable="true"
+                android:contentDescription="Modules &amp; Visual Details"
+                android:focusable="true"
+                android:padding="9dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_nb_layers" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/btn_top_refresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:contentDescription="Refresh Preferences"
+                android:focusable="true"
+                android:padding="9dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_nb_refresh" />
+            </FrameLayout>
+        </LinearLayout>
 
         <!-- Hero Header -->
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:fontFamily="@font/jakarta_extrabold"
+            android:includeFontPadding="false"
+            android:letterSpacing="-0.02"
+            android:lineSpacingMultiplier="1.08"
             android:text="iOS 27 Control Center"
-            android:textColor="@color/text_primary"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+            android:textColor="@color/nb_ink"
+            android:textSize="26sp" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
+            android:fontFamily="@font/jakarta_medium"
+            android:includeFontPadding="false"
             android:text="Liquid Glass overhaul for Infinix XOS 15 (Android 15)"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp" />
+            android:textColor="@color/nb_text_secondary"
+            android:textSize="11.5sp" />
 
-        <TextView
-            android:id="@+id/tv_module_status"
+        <LinearLayout
+            android:id="@+id/layout_status_pill"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_status_inactive"
-            android:paddingStart="14dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="14dp"
-            android:paddingBottom="6dp"
-            android:text="LSPosed: Not Active — Enable in LSPosed Manager"
-            android:textColor="@color/accent_amber"
-            android:textSize="12sp"
-            android:textStyle="bold" />
-
-        <!-- Master Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/bg_glass_card"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Enable iOS 27 Control Center"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Master toggle for all SystemUI Liquid Glass hooks"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/sw_enabled"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true" />
-        </LinearLayout>
-
-        <!-- Layout Mode Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_glass_card"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Quick Settings Grid Style"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <RadioGroup
-                android:id="@+id/rg_layout_mode"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp">
-
-                <RadioButton
-                    android:id="@+id/rb_layout_hybrid"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Hybrid iOS 26/27 (2 Circles + Pills)"
-                    android:textColor="@color/text_primary" />
-
-                <RadioButton
-                    android:id="@+id/rb_layout_pills"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="All 2-Column Glass Pills"
-                    android:textColor="@color/text_primary" />
-
-                <RadioButton
-                    android:id="@+id/rb_layout_circles"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="4-Column Glass Circles"
-                    android:textColor="@color/text_primary" />
-            </RadioGroup>
-        </LinearLayout>
-
-        <!-- Liquid Glass Appearance Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_glass_card"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Liquid Glass Appearance"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Glass Frost Opacity"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-                <TextView
-                    android:id="@+id/tv_glass_opacity_val"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="46%"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp" />
-            </LinearLayout>
-            <SeekBar
-                android:id="@+id/sb_glass_opacity"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:max="85" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Specular Rim Intensity"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-                <TextView
-                    android:id="@+id/tv_rim_intensity_val"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="85%"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp" />
-            </LinearLayout>
-            <SeekBar
-                android:id="@+id/sb_rim_intensity"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:max="100" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Backdrop Dim Overlay"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-                <TextView
-                    android:id="@+id/tv_bg_dim_val"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="18%"
-                    android:textColor="@color/text_primary"
-                    android:textSize="13sp" />
-            </LinearLayout>
-            <SeekBar
-                android:id="@+id/sb_bg_dim"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:max="80" />
-        </LinearLayout>
-
-        <!-- Feature Toggles Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/bg_glass_card"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Modules &amp; Visual Details"
-                android:textColor="@color/text_primary"
-                android:textSize="15sp"
-                android:textStyle="bold" />
-
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/sw_ambient_glow"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Ambient Color Refraction Glow"
-                android:textColor="@color/text_primary" />
-
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/sw_ios_header"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="iOS Top Action Bar (+ &amp; Power)"
-                android:textColor="@color/text_primary" />
-
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/sw_ios_sliders"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Liquid Glass Vertical Capsule Sliders"
-                android:textColor="@color/text_primary" />
-
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/sw_ios_media"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Liquid Glass Media Card"
-                android:textColor="@color/text_primary" />
-
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/sw_subtitles"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Show On / Off Subtitles on Pills"
-                android:textColor="@color/text_primary" />
-
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/sw_hide_iot"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Hide Bottom 'Add Device' Card"
-                android:textColor="@color/text_primary" />
-
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/sw_ios_animations"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="iOS Spring &amp; Staggered Swipe Animations"
-                android:textColor="@color/text_primary" />
-        </LinearLayout>
-
-        <!-- Actions -->
-        <Button
-            android:id="@+id/btn_restart_systemui"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="20dp"
-            android:backgroundTint="@color/accent_blue"
-            android:text="Apply &amp; Restart SystemUI (Root)"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/btn_reset_defaults"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
             android:layout_marginTop="10dp"
-            android:layout_marginBottom="24dp"
-            android:text="Reset to Recommended Defaults"
-            android:textAllCaps="false"
-            android:textColor="@color/text_secondary" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="6dp">
+
+            <ImageView
+                android:id="@+id/iv_status_dot"
+                android:layout_width="9dp"
+                android:layout_height="9dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_nb_status_dot_inactive" />
+
+            <TextView
+                android:id="@+id/tv_module_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/jetbrains_bold"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:text="LSPosed: Not Active"
+                android:textColor="@color/nb_ink"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Master Toggle Card Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="88dp"
+                android:layout_height="13dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginBottom="-2dp"
+                android:background="@drawable/bg_nb_folder_tab_yellow" />
+
+            <LinearLayout
+                android:id="@+id/card_master"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="14dp">
+
+                <FrameLayout
+                    android:id="@+id/badge_master"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:padding="10dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_nb_bolt" />
+                </FrameLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="Enable iOS 27 Control Center"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:fontFamily="@font/jakarta_medium"
+                        android:includeFontPadding="false"
+                        android:text="Master toggle for all SystemUI Liquid Glass hooks"
+                        android:textColor="@color/nb_text_secondary"
+                        android:textSize="11.5sp" />
+                </LinearLayout>
+
+                <com.ios27.controlcenter.ui.NbToggleView
+                    android:id="@+id/sw_enabled"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Quick Settings Grid Style Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="88dp"
+                android:layout_height="13dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginBottom="-2dp"
+                android:background="@drawable/bg_nb_folder_tab_purple" />
+
+            <LinearLayout
+                android:id="@+id/card_grid_style"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:id="@+id/badge_grid"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:padding="7dp">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_nb_grid" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.015"
+                        android:text="Quick Settings Grid Style"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <!-- Radio Option 1 -->
+                <LinearLayout
+                    android:id="@+id/opt_layout_hybrid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:id="@+id/iv_radio_hybrid"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_nb_radio_selected" />
+
+                    <TextView
+                        android:id="@+id/tv_radio_hybrid"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:text="Hybrid iOS 26/27 (2 Circles + Pills)"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+                </LinearLayout>
+
+                <!-- Radio Option 2 -->
+                <LinearLayout
+                    android:id="@+id/opt_layout_pills"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:id="@+id/iv_radio_pills"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_nb_radio_unselected" />
+
+                    <TextView
+                        android:id="@+id/tv_radio_pills"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_medium"
+                        android:includeFontPadding="false"
+                        android:text="All 2-Column Glass Pills"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="12.5sp" />
+                </LinearLayout>
+
+                <!-- Radio Option 3 -->
+                <LinearLayout
+                    android:id="@+id/opt_layout_circles"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="12dp">
+
+                    <ImageView
+                        android:id="@+id/iv_radio_circles"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_nb_radio_unselected" />
+
+                    <TextView
+                        android:id="@+id/tv_radio_circles"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_medium"
+                        android:includeFontPadding="false"
+                        android:text="4-Column Glass Circles"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="12.5sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Liquid Glass Appearance Container -->
+        <LinearLayout
+            android:id="@+id/section_appearance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="88dp"
+                android:layout_height="13dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginBottom="-2dp"
+                android:background="@drawable/bg_nb_folder_tab_green" />
+
+            <LinearLayout
+                android:id="@+id/card_appearance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:id="@+id/badge_sparkles"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:padding="7dp">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_nb_sparkles" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.015"
+                        android:text="Liquid Glass Appearance"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <!-- Slider 1: Glass Frost Opacity -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="Glass Frost Opacity"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <TextView
+                        android:id="@+id/tv_glass_opacity_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/jetbrains_bold"
+                        android:includeFontPadding="false"
+                        android:paddingStart="8dp"
+                        android:paddingTop="3dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="3dp"
+                        android:text="46%"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="11.5sp" />
+                </LinearLayout>
+
+                <com.ios27.controlcenter.ui.NbSeekBar
+                    android:id="@+id/sb_glass_opacity"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
+
+                <!-- Slider 2: Specular Rim Intensity -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="Specular Rim Intensity"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <TextView
+                        android:id="@+id/tv_rim_intensity_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/jetbrains_bold"
+                        android:includeFontPadding="false"
+                        android:paddingStart="8dp"
+                        android:paddingTop="3dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="3dp"
+                        android:text="85%"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="11.5sp" />
+                </LinearLayout>
+
+                <com.ios27.controlcenter.ui.NbSeekBar
+                    android:id="@+id/sb_rim_intensity"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
+
+                <!-- Slider 3: Backdrop Dim Overlay -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="Backdrop Dim Overlay"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <TextView
+                        android:id="@+id/tv_bg_dim_val"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/jetbrains_bold"
+                        android:includeFontPadding="false"
+                        android:paddingStart="8dp"
+                        android:paddingTop="3dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="3dp"
+                        android:text="18%"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="11.5sp" />
+                </LinearLayout>
+
+                <com.ios27.controlcenter.ui.NbSeekBar
+                    android:id="@+id/sb_bg_dim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Modules & Visual Details Container -->
+        <LinearLayout
+            android:id="@+id/section_modules"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="88dp"
+                android:layout_height="13dp"
+                android:layout_marginStart="14dp"
+                android:layout_marginBottom="-2dp"
+                android:background="@drawable/bg_nb_folder_tab_pink" />
+
+            <LinearLayout
+                android:id="@+id/card_modules"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:id="@+id/badge_layers"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:padding="7dp">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_nb_layers" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.015"
+                        android:text="Modules &amp; Visual Details"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <!-- 7 Module Toggle Rows -->
+                <LinearLayout
+                    android:id="@+id/row_ambient_glow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="Ambient Color Refraction Glow"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <com.ios27.controlcenter.ui.NbToggleView
+                        android:id="@+id/sw_ambient_glow"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/row_ios_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="iOS Top Action Bar (+ &amp; Power)"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <com.ios27.controlcenter.ui.NbToggleView
+                        android:id="@+id/sw_ios_header"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/row_ios_sliders"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="Liquid Glass Vertical Capsule Sliders"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <com.ios27.controlcenter.ui.NbToggleView
+                        android:id="@+id/sw_ios_sliders"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/row_ios_media"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="Liquid Glass Media Card"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <com.ios27.controlcenter.ui.NbToggleView
+                        android:id="@+id/sw_ios_media"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/row_subtitles"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="Show On / Off Subtitles on Pills"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <com.ios27.controlcenter.ui.NbToggleView
+                        android:id="@+id/sw_subtitles"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/row_hide_iot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="Hide Bottom 'Add Device' Card"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <com.ios27.controlcenter.ui.NbToggleView
+                        android:id="@+id/sw_hide_iot"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/row_ios_animations"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/jakarta_bold"
+                        android:includeFontPadding="false"
+                        android:letterSpacing="-0.01"
+                        android:text="iOS Spring &amp; Staggered Swipe Animations"
+                        android:textColor="@color/nb_ink"
+                        android:textSize="13.5sp" />
+
+                    <com.ios27.controlcenter.ui.NbToggleView
+                        android:id="@+id/sw_ios_animations"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Bottom Actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:clipChildren="false"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/btn_restart_systemui"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:fontFamily="@font/jakarta_bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:letterSpacing="-0.015"
+                android:paddingStart="20dp"
+                android:paddingTop="14dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="14dp"
+                android:text="Apply &amp; Restart SystemUI (Root)"
+                android:textColor="@color/nb_ink"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/btn_reset_defaults"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:fontFamily="@font/jakarta_bold"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:letterSpacing="-0.01"
+                android:paddingStart="20dp"
+                android:paddingTop="14dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="14dp"
+                android:text="Reset to Recommended Defaults"
+                android:textColor="@color/nb_ink"
+                android:textSize="13.5sp" />
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>
-
